@@ -1,0 +1,32 @@
+# 環境変数・秘密情報（絶対にコミットしない）
+.env
+*.env
+!.env.example
+
+# Azure 発行プロファイル・認証情報
+*.publishsettings
+*.pubxml
+azureProfile.json
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+
+# ローカル保存データ（Azure未設定時の動作確認用）
+instance/
+local_data/
+uploads/
+
+# OS / エディタ
+.DS_Store
+.vscode/
+.idea/
+
+# ログ
+*.log
+
+# フロントエンドのビルド用（成果物の static/css/app.css だけをコミットする）
+tools/frontend/node_modules/
