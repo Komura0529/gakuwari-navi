@@ -1,0 +1,58 @@
+# 学割ナビ: GitHub への push で Azure App Service へ自動デプロイする
+#
+# 【重要】Azure ポータルの「デプロイ センター」で GitHub を連携すると、
+# Azure が同種のワークフローを自動生成します（ファイル名の例:
+# azure-webapps-python.yml など）。両方が残っていると、push のたびに
+# デプロイが二重に走って競合します。使うワークフローは必ず1つだけにしてください。
+#   - このワークフローを使う場合: 自動生成された方を削除する
+#   - 自動生成された方を使う場合: このファイルを削除する
+# このファイルは、自動生成と区別できるよう専用の名前
+# （gakuwari-navi-deploy.yml / ワークフロー名も専用）にしています。
+#
+# 事前準備（README「Azureへのデプロイ手順」参照）:
+#   1. Azure Portal で App Service（Python 3.12 / Linux）を作成する
+#   2. App Service の「デプロイセンター」→ GitHub を連携すると、
+#      発行プロファイル等のシークレットがリポジトリに自動登録される
+#      （シークレットの値はコードに書かないこと）
+#   3. 下の env の AZURE_WEBAPP_NAME を自分のアプリ名に書き換える
+
+name: Gakuwari Navi - Deploy to Azure
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# 同時に複数のデプロイが走らないようにする（二重デプロイ対策）
+concurrency:
+  group: gakuwari-navi-deploy
+  cancel-in-progress: false
+
+env:
+  AZURE_WEBAPP_NAME: gakuwari-navi   # ← 自分の App Service 名に変更
+  PYTHON_VERSION: '3.12'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies (確認用)
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Syntax check
+        run: python -m py_compile app.py storage.py sample_data.py
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
