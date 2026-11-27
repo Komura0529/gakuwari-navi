@@ -1,0 +1,86 @@
+/* 学割ナビ 共通スタイル（Tailwind / daisyUI の補完） */
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* 絞り込みチップ */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.4rem 0.9rem;
+  border-radius: 9999px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  background: #fff;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+  transition: all 0.15s ease;
+}
+.chip:hover {
+  border-color: #10b981;
+  color: #047857;
+}
+.chip-active {
+  background: #059669;
+  border-color: #059669;
+  color: #fff;
+}
+.chip-active:hover {
+  color: #fff;
+}
+
+/* セクション見出し */
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #1e293b;
+}
+
+/* 詳細ページの定義リスト */
+.detail-row {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.55rem 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+.detail-row dt {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.4rem;
+  width: 7.5rem;
+  flex-shrink: 0;
+  font-weight: 700;
+  color: #64748b;
+}
+.detail-row dt svg {
+  margin-top: 0.15rem;
+  color: #059669;
+}
+.detail-row dd {
+  flex: 1;
+  line-height: 1.6;
+}
+
+/* お気に入りボタン（ON状態） */
+.fav-btn.fav-on {
+  color: #f43f5e !important;
+}
+.fav-btn.fav-on svg {
+  fill: #f43f5e;
+}
+
+/* Lucide のサイズ調整用ユーティリティ */
+.w-4\.5 {
+  width: 1.125rem;
+}
+.h-4\.5 {
+  height: 1.125rem;
+}

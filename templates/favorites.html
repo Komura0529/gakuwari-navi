@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}お気に入り{% endblock %}
+{% block content %}
+<div class="mt-8">
+  <h1 class="text-2xl font-black flex items-center gap-2">
+    <i data-lucide="heart" class="w-6 h-6 text-rose-500"></i>お気に入り
+  </h1>
+  <p class="text-sm text-slate-500 mt-2">お気に入りはこの端末のブラウザに保存されます（LocalStorage）。</p>
+  <div id="fav-empty" class="hidden mt-8 bg-white rounded-2xl shadow-card p-10 text-center space-y-3">
+    <i data-lucide="heart" class="w-10 h-10 text-slate-300 mx-auto"></i>
+    <p class="font-bold">お気に入りはまだありません</p>
+    <p class="text-sm text-slate-400">学割カードのハートを押すと、ここに保存されます。</p>
+    <a href="{{ url_for('index') }}" class="btn btn-outline border-brand-600 text-brand-700 rounded-full">学割を探す</a>
+  </div>
+  <div id="fav-list" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mt-6"></div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+(async () => {
+  const ids = JSON.parse(localStorage.getItem('gakuwari_favorites') || '[]');
+  const list = document.getElementById('fav-list');
+  if (!ids.length) { document.getElementById('fav-empty').classList.remove('hidden'); return; }
+  // 一覧ページのHTMLから該当カードを再取得する代わりに、詳細ページへのリンクカードを生成する
+  let shown = 0;
+  for (const id of ids) {
+    const res = await fetch('/post/' + encodeURIComponent(id));
+    if (!res.ok) continue;
+    const html = await res.text();
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    const title = doc.querySelector('h1') ? doc.querySelector('h1').textContent : id;
+    const img = doc.querySelector('article figure img');
+    const card = document.createElement('article');
+    card.className = 'card bg-white shadow-card rounded-2xl overflow-hidden hover:shadow-cardhover transition';
+    card.innerHTML = '<a class="block" href="/post/' + encodeURIComponent(id) + '">' +
+      (img ? '<figure class="aspect-[16/10] bg-brand-50"><img class="w-full h-full object-cover" src="' + img.getAttribute('src') + '" alt=""></figure>' : '') +
+      '<div class="p-4 font-bold text-[15px]">' + title.replace(/</g, '&lt;') + '</div></a>';
+    list.appendChild(card);
+    shown++;
+  }
+  if (!shown) document.getElementById('fav-empty').classList.remove('hidden');
+})();
+</script>
+{% endblock %}

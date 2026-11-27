@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}学割ナビ{% endblock %} | 放課後を、もっとおトクに。</title>
+<meta name="description" content="高校生が使える学割情報をみんなで共有する掲示板。飲食店・カラオケ・映画館などの学割を検索できます。">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+<!-- Tailwind CSS + daisyUI はビルド済みCSS（static/css/app.css）を同梱。生成方法は tools/frontend/ 参照 -->
+<link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<script src="{{ url_for('static', filename='js/lucide.min.js') }}"></script>
+</head>
+<body class="bg-[#f7f8f7] text-slate-800 font-sans pb-20 md:pb-0">
+
+<!-- ヘッダー -->
+<header class="bg-white/95 backdrop-blur sticky top-0 z-40 border-b border-emerald-100">
+  <div class="max-w-6xl mx-auto px-4 h-16 flex items-center gap-3">
+    <a href="{{ url_for('index') }}" class="flex items-center gap-2 shrink-0">
+      <span class="w-9 h-9 rounded-xl bg-brand-600 text-white flex items-center justify-center">
+        <i data-lucide="graduation-cap" class="w-5 h-5"></i>
+      </span>
+      <span class="text-xl font-black tracking-tight text-brand-700">学割<span class="text-accentlime">ナビ</span></span>
+    </a>
+    <form action="{{ url_for('index') }}" method="get" class="hidden md:flex flex-1 max-w-md ml-4">
+      <label class="input input-bordered flex items-center gap-2 w-full rounded-full bg-[#f7f8f7]">
+        <i data-lucide="search" class="w-4 h-4 text-slate-400"></i>
+        <input type="text" name="q" value="{{ q|default('') }}" placeholder="店舗名・駅名で検索" class="grow bg-transparent outline-none">
+      </label>
+    </form>
+    <div class="flex-1 md:hidden"></div>
+    <span class="hidden lg:inline-flex badge badge-outline border-emerald-200 text-brand-700 gap-1">
+      <i data-lucide="database" class="w-3.5 h-3.5"></i>
+      {% if storage_mode == 'azure' %}Azure Storage{% else %}ローカル保存モード{% endif %}
+    </span>
+    <a href="{{ url_for('favorites') }}" class="btn btn-ghost btn-circle hidden md:inline-flex" aria-label="お気に入り">
+      <i data-lucide="heart" class="w-5 h-5"></i>
+    </a>
+    <a href="{{ url_for('new_post') }}" class="btn bg-brand-600 hover:bg-brand-700 text-white border-none rounded-full px-4 hidden md:inline-flex gap-1">
+      <i data-lucide="plus" class="w-4 h-4"></i>投稿する
+    </a>
+  </div>
+</header>
+
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+  <div class="max-w-6xl mx-auto px-4 mt-4 space-y-2">
+    {% for m in messages %}
+    <div role="alert" class="alert bg-brand-50 border border-emerald-200 text-brand-700 py-3">
+      <i data-lucide="check-circle-2" class="w-5 h-5"></i><span>{{ m }}</span>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+{% endwith %}
+
+<main class="max-w-6xl mx-auto px-4">
+  {% block content %}{% endblock %}
+</main>
+
+<footer class="mt-16 bg-white border-t border-emerald-100">
+  <div class="max-w-6xl mx-auto px-4 py-10 text-sm text-slate-500 space-y-3">
+    <p class="flex items-center gap-2 font-bold text-brand-700">
+      <i data-lucide="graduation-cap" class="w-4 h-4"></i>学割ナビ
+    </p>
+    <p>学割ナビは高校生同士で学割情報を共有する掲示板です。掲載情報は投稿時点のものです。利用前に公式サイトや店舗で最新情報を確認してください。</p>
+    <p class="flex items-start gap-1.5">
+      <i data-lucide="shield-alert" class="w-4 h-4 mt-0.5 shrink-0"></i>
+      本名・学校名・学生証の写真など、個人が特定できる情報は絶対に投稿しないでください。
+    </p>
+    <p>サンプルとして表示されている店舗・価格は、すべて架空のデモデータです。</p>
+  </div>
+</footer>
+
+<!-- スマートフォン用 下部ナビゲーション -->
+<nav class="md:hidden fixed bottom-0 inset-x-0 z-40 bg-white border-t border-emerald-100 shadow-[0_-2px_12px_rgba(0,0,0,0.05)]">
+  <div class="grid grid-cols-4 h-16">
+    <a href="{{ url_for('index') }}" class="flex flex-col items-center justify-center gap-0.5 text-brand-700">
+      <i data-lucide="home" class="w-5 h-5"></i><span class="text-[11px] font-medium">ホーム</span>
+    </a>
+    <a href="{{ url_for('index') }}#search" class="flex flex-col items-center justify-center gap-0.5 text-slate-500">
+      <i data-lucide="search" class="w-5 h-5"></i><span class="text-[11px] font-medium">さがす</span>
+    </a>
+    <a href="{{ url_for('new_post') }}" class="flex flex-col items-center justify-center gap-0.5 text-slate-500">
+      <span class="w-9 h-9 -mt-5 rounded-full bg-brand-600 text-white flex items-center justify-center shadow-card">
+        <i data-lucide="plus" class="w-5 h-5"></i>
+      </span><span class="text-[11px] font-medium">投稿</span>
+    </a>
+    <a href="{{ url_for('favorites') }}" class="flex flex-col items-center justify-center gap-0.5 text-slate-500">
+      <i data-lucide="heart" class="w-5 h-5"></i><span class="text-[11px] font-medium">お気に入り</span>
+    </a>
+  </div>
+</nav>
+
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+<script>lucide.createIcons();</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

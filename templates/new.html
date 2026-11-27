@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% block title %}学割を投稿する{% endblock %}
+{% block content %}
+<div class="mt-8 max-w-2xl mx-auto">
+  <h1 class="text-2xl font-black flex items-center gap-2">
+    <span class="w-10 h-10 rounded-xl bg-brand-600 text-white flex items-center justify-center"><i data-lucide="plus" class="w-5 h-5"></i></span>
+    学割を投稿する
+  </h1>
+  <p class="text-sm text-slate-500 mt-3 leading-relaxed">知っている学割情報をみんなと共有しましょう。投稿前に、公式サイトや店舗で内容が最新か確認してください。</p>
+
+  <div role="alert" class="alert bg-amber-50 border border-amber-200 text-amber-800 mt-5 text-sm">
+    <i data-lucide="shield-alert" class="w-5 h-5 shrink-0"></i>
+    <span>本名・学校名・学生証の写真など、個人が特定できる情報は絶対に投稿しないでください。確認していない学割情報の投稿も控えてください。</span>
+  </div>
+
+  {% if errors %}
+  <div role="alert" class="alert bg-rose-50 border border-rose-200 text-rose-700 mt-5 text-sm">
+    <i data-lucide="alert-circle" class="w-5 h-5 shrink-0"></i>
+    <ul class="list-disc list-inside space-y-0.5">
+      {% for e in errors %}<li>{{ e }}</li>{% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+
+  <form method="post" enctype="multipart/form-data" class="mt-6 bg-white rounded-3xl shadow-card p-6 md:p-8 space-y-5">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <div class="form-control">
+      <label class="label"><span class="label-text font-bold">店舗名 <span class="text-rose-500">*</span></span></label>
+      <input type="text" name="store_name" required maxlength="60" value="{{ form.get('store_name','') }}" placeholder="例：カラオケパーク ○○店" class="input input-bordered rounded-xl w-full">
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div class="form-control">
+        <label class="label"><span class="label-text font-bold">ジャンル <span class="text-rose-500">*</span></span></label>
+        <select name="genre" required class="select select-bordered rounded-xl w-full">
+          <option value="">選択してください</option>
+          {% for g in genres %}<option value="{{ g }}" {{ 'selected' if form.get('genre') == g }}>{{ g }}</option>{% endfor %}
+        </select>
+      </div>
+      <div class="form-control">
+        <label class="label"><span class="label-text font-bold">エリア <span class="text-rose-500">*</span></span></label>
+        <select name="area" required class="select select-bordered rounded-xl w-full">
+          <option value="">選択してください</option>
+          {% for a in areas %}<option value="{{ a }}" {{ 'selected' if form.get('area') == a }}>{{ a }}</option>{% endfor %}
+        </select>
+      </div>
+    </div>
+
+    <div class="form-control">
+      <label class="label"><span class="label-text font-bold">最寄り駅 <span class="text-rose-500">*</span></span></label>
+      <input type="text" name="station" required maxlength="30" value="{{ form.get('station','') }}" placeholder="例：新宿駅" class="input input-bordered rounded-xl w-full">
+    </div>
+
+    <div class="form-control">
+      <label class="label"><span class="label-text font-bold">学割内容 <span class="text-rose-500">*</span></span><span class="label-text-alt">10〜500文字</span></label>
+      <textarea name="description" required minlength="10" maxlength="500" rows="4" placeholder="例：学生証の提示で全品20%OFF。平日17時までドリンクバー無料です。" class="textarea textarea-bordered rounded-xl w-full">{{ form.get('description','') }}</textarea>
+    </div>
+
+    <div class="grid grid-cols-2 gap-4">
+      <div class="form-control">
+        <label class="label"><span class="label-text font-bold">通常価格（円） <span class="text-rose-500">*</span></span></label>
+        <input type="number" name="regular_price" id="regular_price" required min="1" max="9999999" value="{{ form.get('regular_price','') }}" placeholder="1200" class="input input-bordered rounded-xl w-full">
+      </div>
+      <div class="form-control">
+        <label class="label"><span class="label-text font-bold">学割価格（円） <span class="text-rose-500">*</span></span></label>
+        <input type="number" name="student_price" id="student_price" required min="0" max="9999999" value="{{ form.get('student_price','') }}" placeholder="840" class="input input-bordered rounded-xl w-full">
+      </div>
+    </div>
+    <p id="discount-preview" class="text-sm font-bold text-brand-600 hidden">割引率：<span id="discount-value"></span>% OFF</p>
+
+    <div class="form-control">
+      <label class="label"><span class="label-text font-bold">利用条件</span></label>
+      <input type="text" name="conditions" maxlength="300" value="{{ form.get('conditions','') }}" placeholder="例：学生証の提示が必要。他クーポン併用不可。" class="input input-bordered rounded-xl w-full">
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div class="form-control">
+        <label class="label"><span class="label-text font-bold">対象学年</span></label>
+        <input type="text" name="target_grades" maxlength="30" value="{{ form.get('target_grades','') }}" placeholder="高校生全学年" class="input input-bordered rounded-xl w-full">
+      </div>
+      <div class="form-control">
+        <label class="label"><span class="label-text font-bold">有効期限 <span class="text-rose-500">*</span></span></label>
+        <input type="date" name="valid_until" required value="{{ form.get('valid_until','') }}" class="input input-bordered rounded-xl w-full">
+      </div>
+    </div>
+
+    <div class="form-control">
+      <label class="label"><span class="label-text font-bold">公式サイトURL</span></label>
+      <input type="url" name="official_url" value="{{ form.get('official_url','') }}" placeholder="https://example.com/" class="input input-bordered rounded-xl w-full">
+    </div>
+
+    <div class="form-control">
+      <label class="label"><span class="label-text font-bold">店舗の画像</span><span class="label-text-alt">JPG/PNG/GIF/WebP・5MBまで</span></label>
+      <input type="file" name="image" id="image-input" accept="image/jpeg,image/png,image/gif,image/webp" class="file-input file-input-bordered rounded-xl w-full">
+      <div id="image-preview-wrap" class="hidden mt-3">
+        <img id="image-preview" alt="アップロード画像のプレビュー" class="rounded-2xl max-h-56 w-full object-cover shadow-card">
+      </div>
+      <p class="text-[11px] text-slate-400 mt-2 flex items-center gap-1">
+        <i data-lucide="image" class="w-3.5 h-3.5"></i>学生証や顔が写った写真はアップロードしないでください。
+      </p>
+    </div>
+
+    <button class="btn bg-brand-600 hover:bg-brand-700 text-white border-none rounded-full w-full h-12 text-base gap-1">
+      <i data-lucide="send" class="w-4 h-4"></i>投稿する
+    </button>
+  </form>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+const rp = document.getElementById('regular_price');
+const sp = document.getElementById('student_price');
+const wrap = document.getElementById('discount-preview');
+const val = document.getElementById('discount-value');
+function updateDiscount() {
+  const r = parseInt(rp.value, 10), s = parseInt(sp.value, 10);
+  if (r > 0 && s >= 0 && s < r) {
+    val.textContent = Math.round((r - s) / r * 100);
+    wrap.classList.remove('hidden');
+  } else {
+    wrap.classList.add('hidden');
+  }
+}
+rp.addEventListener('input', updateDiscount);
+sp.addEventListener('input', updateDiscount);
+updateDiscount();
+
+const input = document.getElementById('image-input');
+input.addEventListener('change', () => {
+  const file = input.files[0];
+  const previewWrap = document.getElementById('image-preview-wrap');
+  if (!file) { previewWrap.classList.add('hidden'); return; }
+  const url = URL.createObjectURL(file);
+  document.getElementById('image-preview').src = url;
+  previewWrap.classList.remove('hidden');
+});
+</script>
+{% endblock %}

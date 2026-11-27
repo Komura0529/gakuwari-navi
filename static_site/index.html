@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>学割ナビ（静的版） | 放課後を、もっとおトクに。</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+<!-- Tailwind CSS + daisyUI はビルド済みCSSを同梱（css/app.css） -->
+<link rel="stylesheet" href="css/app.css">
+<link rel="stylesheet" href="css/style.css">
+<script src="js/lucide.min.js"></script>
+</head>
+<body class="bg-[#f7f8f7] text-slate-800 font-sans pb-20 md:pb-0">
+
+<header class="bg-white/95 sticky top-0 z-40 border-b border-emerald-100">
+  <div class="max-w-6xl mx-auto px-4 h-16 flex items-center gap-3">
+    <a href="#" onclick="showList();return false;" class="flex items-center gap-2">
+      <span class="w-9 h-9 rounded-xl bg-brand-600 text-white flex items-center justify-center"><i data-lucide="graduation-cap" class="w-5 h-5"></i></span>
+      <span class="text-xl font-black tracking-tight text-brand-700">学割<span class="text-accentlime">ナビ</span></span>
+    </a>
+    <span class="badge badge-outline border-emerald-200 text-brand-700">静的版</span>
+    <div class="flex-1"></div>
+    <button onclick="showForm()" class="btn bg-brand-600 hover:bg-brand-700 text-white border-none rounded-full px-4 hidden md:inline-flex gap-1"><i data-lucide="plus" class="w-4 h-4"></i>投稿する</button>
+  </div>
+</header>
+
+<main class="max-w-6xl mx-auto px-4">
+  <!-- 一覧ビュー -->
+  <div id="view-list">
+    <section class="mt-6 rounded-3xl bg-brand-600 text-white px-6 py-10 md:px-12 md:py-14 relative overflow-hidden">
+      <div class="absolute -right-10 -top-10 w-56 h-56 rounded-full bg-white/10"></div>
+      <div class="relative max-w-xl space-y-4">
+        <p class="inline-flex items-center gap-1.5 text-sm font-semibold bg-white/15 rounded-full px-3 py-1"><i data-lucide="sparkles" class="w-4 h-4"></i>高校生のための学割共有掲示板</p>
+        <h1 class="text-3xl md:text-[40px] font-black leading-tight">放課後を、もっとおトクに。</h1>
+        <p class="text-white/85 text-sm md:text-base leading-relaxed">みんなが見つけた学割情報を共有して、放課後をもっと楽しもう。（この静的版の投稿はこの端末内にだけ保存されます）</p>
+        <div class="flex gap-2 bg-white rounded-full p-1.5 shadow max-w-md">
+          <label class="flex items-center gap-2 flex-1 pl-3">
+            <i data-lucide="search" class="w-4 h-4 text-slate-400 shrink-0"></i>
+            <input id="q" type="text" placeholder="店舗名・駅名で検索" class="w-full text-slate-700 outline-none text-sm bg-transparent" oninput="render()">
+          </label>
+        </div>
+      </div>
+    </section>
+
+    <section class="mt-8 space-y-3">
+      <div class="flex flex-wrap items-center gap-2" id="genre-chips"></div>
+      <div class="flex flex-wrap items-center gap-2">
+        <div class="flex flex-wrap items-center gap-2" id="area-chips"></div>
+        <div class="ml-auto flex items-center gap-2">
+          <label class="text-xs text-slate-400 hidden sm:block">並び替え</label>
+          <select id="sort" class="select select-bordered select-sm rounded-full bg-white" onchange="render()">
+            <option value="new">新着順</option>
+            <option value="discount">割引率順</option>
+            <option value="price">価格が安い順</option>
+            <option value="popular">人気順</option>
+          </select>
+        </div>
+      </div>
+    </section>
+
+    <section class="mt-10 mb-4">
+      <h2 class="section-title"><i data-lucide="ticket-percent" class="w-5 h-5 text-brand-600"></i>学割情報一覧 <span id="count" class="text-sm font-medium text-slate-400 ml-1"></span></h2>
+      <div id="grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 mt-4"></div>
+      <div id="empty" class="hidden mt-6 bg-white rounded-2xl shadow-card p-10 text-center space-y-3">
+        <p class="font-bold">条件に合う学割が見つかりませんでした</p>
+        <p class="text-sm text-slate-400">キーワードや絞り込みを変えて、もう一度探してみてください。</p>
+      </div>
+    </section>
+  </div>
+
+  <!-- 詳細ビュー -->
+  <div id="view-detail" class="hidden mt-6"></div>
+
+  <!-- 投稿フォームビュー -->
+  <div id="view-form" class="hidden mt-8 max-w-2xl mx-auto">
+    <h2 class="text-2xl font-black flex items-center gap-2"><span class="w-10 h-10 rounded-xl bg-brand-600 text-white flex items-center justify-center"><i data-lucide="plus" class="w-5 h-5"></i></span>学割を投稿する</h2>
+    <div role="alert" class="alert bg-amber-50 border border-amber-200 text-amber-800 mt-5 text-sm">
+      <i data-lucide="shield-alert" class="w-5 h-5 shrink-0"></i>
+      <span>本名・学校名・学生証の写真など、個人が特定できる情報は絶対に投稿しないでください。静的版の投稿はこの端末のブラウザ内に保存されます。</span>
+    </div>
+    <form id="post-form" class="mt-6 bg-white rounded-3xl shadow-card p-6 md:p-8 space-y-5">
+      <div class="form-control"><label class="label"><span class="label-text font-bold">店舗名 *</span></label>
+        <input name="store_name" required maxlength="60" class="input input-bordered rounded-xl w-full" placeholder="例：カラオケパーク ○○店"></div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="form-control"><label class="label"><span class="label-text font-bold">ジャンル *</span></label>
+          <select name="genre" required class="select select-bordered rounded-xl w-full" id="f-genre"></select></div>
+        <div class="form-control"><label class="label"><span class="label-text font-bold">エリア *</span></label>
+          <select name="area" required class="select select-bordered rounded-xl w-full" id="f-area"></select></div>
+      </div>
+      <div class="form-control"><label class="label"><span class="label-text font-bold">最寄り駅 *</span></label>
+        <input name="station" required maxlength="30" class="input input-bordered rounded-xl w-full" placeholder="例：新宿駅"></div>
+      <div class="form-control"><label class="label"><span class="label-text font-bold">学割内容 *</span></label>
+        <textarea name="description" required minlength="10" maxlength="500" rows="4" class="textarea textarea-bordered rounded-xl w-full" placeholder="例：学生証の提示で全品20%OFFです。"></textarea></div>
+      <div class="grid grid-cols-2 gap-4">
+        <div class="form-control"><label class="label"><span class="label-text font-bold">通常価格（円）*</span></label>
+          <input name="regular_price" type="number" required min="1" class="input input-bordered rounded-xl w-full"></div>
+        <div class="form-control"><label class="label"><span class="label-text font-bold">学割価格（円）*</span></label>
+          <input name="student_price" type="number" required min="0" class="input input-bordered rounded-xl w-full"></div>
+      </div>
+      <p id="f-discount" class="text-sm font-bold text-brand-600 hidden">割引率：<span></span>% OFF</p>
+      <div class="form-control"><label class="label"><span class="label-text font-bold">利用条件</span></label>
+        <input name="conditions" maxlength="300" class="input input-bordered rounded-xl w-full" placeholder="例：学生証の提示が必要"></div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="form-control"><label class="label"><span class="label-text font-bold">対象学年</span></label>
+          <input name="target_grades" maxlength="30" class="input input-bordered rounded-xl w-full" placeholder="高校生全学年"></div>
+        <div class="form-control"><label class="label"><span class="label-text font-bold">有効期限 *</span></label>
+          <input name="valid_until" type="date" required class="input input-bordered rounded-xl w-full"></div>
+      </div>
+      <div class="form-control"><label class="label"><span class="label-text font-bold">公式サイトURL</span></label>
+        <input name="official_url" type="url" class="input input-bordered rounded-xl w-full" placeholder="https://example.com/"></div>
+      <div class="form-control"><label class="label"><span class="label-text font-bold">店舗の画像</span></label>
+        <input id="f-image" type="file" accept="image/jpeg,image/png,image/gif,image/webp" class="file-input file-input-bordered rounded-xl w-full">
+        <img id="f-preview" class="hidden mt-3 rounded-2xl max-h-56 w-full object-cover" alt="プレビュー"></div>
+      <button class="btn bg-brand-600 hover:bg-brand-700 text-white border-none rounded-full w-full h-12 text-base">投稿する</button>
+    </form>
+  </div>
+</main>
+
+<footer class="mt-16 bg-white border-t border-emerald-100">
+  <div class="max-w-6xl mx-auto px-4 py-10 text-sm text-slate-500 space-y-3">
+    <p class="font-bold text-brand-700">学割ナビ（静的版）</p>
+    <p>掲載情報は投稿時点のものです。利用前に公式サイトや店舗で最新情報を確認してください。サンプル店舗・価格はすべて架空のデモデータです。</p>
+    <p>本名・学校名・学生証の写真など、個人が特定できる情報は絶対に投稿しないでください。</p>
+  </div>
+</footer>
+
+<nav class="md:hidden fixed bottom-0 inset-x-0 z-40 bg-white border-t border-emerald-100">
+  <div class="grid grid-cols-3 h-16">
+    <a href="#" onclick="showList();return false;" class="flex flex-col items-center justify-center gap-0.5 text-brand-700"><i data-lucide="home" class="w-5 h-5"></i><span class="text-[11px] font-medium">ホーム</span></a>
+    <a href="#" onclick="showForm();return false;" class="flex flex-col items-center justify-center gap-0.5 text-slate-500"><span class="w-9 h-9 -mt-5 rounded-full bg-brand-600 text-white flex items-center justify-center"><i data-lucide="plus" class="w-5 h-5"></i></span><span class="text-[11px] font-medium">投稿</span></a>
+    <a href="#" onclick="showFavorites();return false;" class="flex flex-col items-center justify-center gap-0.5 text-slate-500"><i data-lucide="heart" class="w-5 h-5"></i><span class="text-[11px] font-medium">お気に入り</span></a>
+  </div>
+</nav>
+
+<script>
+const GENRES = ["飲食店", "カフェ", "カラオケ", "映画館", "娯楽施設", "スポーツ"];
+const AREAS = ["新宿", "渋谷", "池袋", "原宿", "下北沢", "吉祥寺"];
+const SEED = [{"id": "demo001", "store_name": "らーめん工房 麺太郎（デモ）", "genre": "飲食店", "area": "新宿", "station": "新宿駅", "description": "学生証の提示で、らーめん全品が学割価格に。放課後の大盛り無料サービスもあります。", "regular_price": 980, "student_price": 700, "conditions": "学生証の提示が必要。他のクーポンとの併用不可。", "target_grades": "高校生全学年", "valid_until": "2027-03-31", "confirmed_at": "2026-11-20", "official_url": "https://example.com/demo/mentaro", "image": "demo/ramen.jpg", "likes": 128, "reports": 0, "created_at": "2026-11-20T16:00:00+09:00", "is_demo": true, "image_url": "images/ramen.jpg"}, {"id": "demo002", "store_name": "カラオケパーク JOYJOY（デモ）", "genre": "カラオケ", "area": "渋谷", "station": "渋谷駅", "description": "平日17時までの入室で室料30%OFF。フリータイムも学割対象です。", "regular_price": 1200, "student_price": 840, "conditions": "平日17時までの入室に限る。1ドリンクオーダー制。", "target_grades": "高校生全学年", "valid_until": "2027-02-28", "confirmed_at": "2026-11-18", "official_url": "https://example.com/demo/joyjoy", "image": "demo/karaoke.jpg", "likes": 214, "reports": 0, "created_at": "2026-11-18T15:30:00+09:00", "is_demo": true, "image_url": "images/karaoke.jpg"}, {"id": "demo003", "store_name": "シネマガーデン池袋（デモ）", "genre": "映画館", "area": "池袋", "station": "池袋駅", "description": "高校生料金でいつでも鑑賞OK。ポップコーンSサイズが100円引きになるセットもあります。", "regular_price": 1900, "student_price": 1200, "conditions": "チケット購入時に学生証を提示。特別興行は対象外の場合あり。", "target_grades": "高校生全学年", "valid_until": "2027-03-31", "confirmed_at": "2026-11-22", "official_url": "https://example.com/demo/cinema", "image": "demo/cinema.jpg", "likes": 186, "reports": 0, "created_at": "2026-11-22T12:00:00+09:00", "is_demo": true, "image_url": "images/cinema.jpg"}, {"id": "demo004", "store_name": "バーガーラボ 原宿店（デモ）", "genre": "飲食店", "area": "原宿", "station": "原宿駅", "description": "バーガーセットが学生証提示で200円引き。放課後16〜19時はポテト増量無料。", "regular_price": 1100, "student_price": 900, "conditions": "16〜19時の来店に限る。テイクアウト可。", "target_grades": "高校生全学年", "valid_until": "2026-12-31", "confirmed_at": "2026-11-15", "official_url": "https://example.com/demo/burger", "image": "demo/burger.jpg", "likes": 97, "reports": 0, "created_at": "2026-11-15T17:45:00+09:00", "is_demo": true, "image_url": "images/burger.jpg"}, {"id": "demo005", "store_name": "ブック＆カフェ そらまめ（デモ）", "genre": "カフェ", "area": "下北沢", "station": "下北沢駅", "description": "ドリンク全品15%OFF。自習スペースとして使える席もあり、テスト期間に人気です。", "regular_price": 600, "student_price": 510, "conditions": "店内利用のみ。混雑時は2時間制。", "target_grades": "高校生全学年", "valid_until": "2027-01-31", "confirmed_at": "2026-11-10", "official_url": "https://example.com/demo/soramame", "image": "demo/cafe.jpg", "likes": 76, "reports": 0, "created_at": "2026-11-10T14:20:00+09:00", "is_demo": true, "image_url": "images/cafe.jpg"}, {"id": "demo006", "store_name": "アミューズランド吉祥寺（デモ）", "genre": "娯楽施設", "area": "吉祥寺", "station": "吉祥寺駅", "description": "ゲームメダル貸出が学割価格。プリクラ1回無料券がもらえるキャンペーン中です。", "regular_price": 1000, "student_price": 700, "conditions": "学生証の提示が必要。キャンペーンは予告なく終了する場合があります。", "target_grades": "高校生全学年", "valid_until": "2027-03-31", "confirmed_at": "2026-11-21", "official_url": "https://example.com/demo/amuse", "image": "demo/amuse.jpg", "likes": 143, "reports": 0, "created_at": "2026-11-21T11:10:00+09:00", "is_demo": true, "image_url": "images/amuse.jpg"}, {"id": "demo007", "store_name": "ボウリングスクエア新宿（デモ）", "genre": "スポーツ", "area": "新宿", "station": "新宿三丁目駅", "description": "2ゲーム＋貸靴のパックが学割価格。部活帰りのグループ利用に人気です。", "regular_price": 1600, "student_price": 1100, "conditions": "平日のみ。予約優先のため週末は対象外。", "target_grades": "高校生全学年", "valid_until": "2027-02-28", "confirmed_at": "2026-11-12", "official_url": "https://example.com/demo/bowling", "image": "demo/bowling.svg", "likes": 64, "reports": 0, "created_at": "2026-11-12T18:00:00+09:00", "is_demo": true, "image_url": "images/bowling.svg"}, {"id": "demo008", "store_name": "タピオカ工房 もちもち堂（デモ）", "genre": "カフェ", "area": "渋谷", "station": "渋谷駅", "description": "全ドリンク50円引き。トッピング1つ無料の学割もあります。", "regular_price": 650, "student_price": 600, "conditions": "学生証の提示が必要。サイズアップは対象外。", "target_grades": "高校生全学年", "valid_until": "2026-11-15", "confirmed_at": "2026-10-28", "official_url": "https://example.com/demo/mochimochi", "image": "demo/tapioca.jpg", "likes": 52, "reports": 0, "created_at": "2026-10-28T13:00:00+09:00", "is_demo": true, "image_url": "images/tapioca.jpg"}, {"id": "demo009", "store_name": "回転寿司 うみまる（デモ）", "genre": "飲食店", "area": "池袋", "station": "池袋駅", "description": "会計から10%OFF。平日ランチはさらにお得な学割セットがあります。", "regular_price": 1500, "student_price": 1350, "conditions": "会計時に学生証を提示。他の割引との併用不可。", "target_grades": "高校生全学年", "valid_until": "2027-03-31", "confirmed_at": "2026-11-19", "official_url": "https://example.com/demo/umimaru", "image": "demo/sushi.jpg", "likes": 88, "reports": 0, "created_at": "2026-11-19T16:40:00+09:00", "is_demo": true, "image_url": "images/sushi.jpg"}, {"id": "demo010", "store_name": "カラオケボックス うた丸（デモ）", "genre": "カラオケ", "area": "池袋", "station": "池袋駅", "description": "土日も使える学割。室料20%OFF＋ドリンクバー無料です。", "regular_price": 1500, "student_price": 1200, "conditions": "学生証の提示が必要。繁忙期は対象外の日があります。", "target_grades": "高校生全学年", "valid_until": "2027-01-31", "confirmed_at": "2026-11-16", "official_url": "https://example.com/demo/utamaru", "image": "demo/karaoke2.jpg", "likes": 159, "reports": 0, "created_at": "2026-11-16T15:00:00+09:00", "is_demo": true, "image_url": "images/karaoke2.jpg"}, {"id": "demo011", "store_name": "スケートパーク フローズン（デモ）", "genre": "スポーツ", "area": "原宿", "station": "明治神宮前駅", "description": "滑走料＋貸靴のセットが学割価格。初心者向け無料レッスン付きの日もあります。", "regular_price": 1800, "student_price": 1300, "conditions": "学生証の提示が必要。手袋の着用必須（持参または購入）。", "target_grades": "高校生全学年", "valid_until": "2027-02-28", "confirmed_at": "2026-11-23", "official_url": "https://example.com/demo/frozen", "image": "demo/skate.jpg", "likes": 71, "reports": 0, "created_at": "2026-11-23T10:30:00+09:00", "is_demo": true, "image_url": "images/skate.jpg"}, {"id": "demo012", "store_name": "謎解きハウス エスケープ（デモ）", "genre": "娯楽施設", "area": "下北沢", "station": "下北沢駅", "description": "脱出ゲームの参加費が学割価格。4人以上のグループでさらに100円引き。", "regular_price": 2500, "student_price": 2000, "conditions": "Web予約時に学割を選択し、当日学生証を提示。", "target_grades": "高校生全学年", "valid_until": "2027-03-31", "confirmed_at": "2026-11-24", "official_url": "https://example.com/demo/escape", "image": "demo/escape.jpg", "likes": 201, "reports": 0, "created_at": "2026-11-24T19:00:00+09:00", "is_demo": true, "image_url": "images/escape.jpg"}];
+const LS_POSTS = 'gakuwari_static_posts';
+const LS_FAV = 'gakuwari_favorites';
+const LS_COMMENTS = 'gakuwari_static_comments';
+let curGenre = '', curArea = '', favOnly = false, uploadedImage = '';
+
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function rate(p){return p.regular_price>0&&p.student_price<p.regular_price?Math.round((p.regular_price-p.student_price)/p.regular_price*100):0;}
+function expired(p){return p.valid_until && new Date(p.valid_until) < new Date(new Date().toDateString());}
+function allPosts(){
+  let mine = [];
+  try { mine = JSON.parse(localStorage.getItem(LS_POSTS)||'[]'); } catch(e) {}
+  return mine.concat(SEED);
+}
+function favs(){ try { return JSON.parse(localStorage.getItem(LS_FAV)||'[]'); } catch(e){ return []; } }
+function yen(n){ return '¥' + Number(n).toLocaleString(); }
+
+function chips(el, items, cur, fn){
+  const host = document.getElementById(el);
+  host.innerHTML = '';
+  const mk = (label, val) => {
+    const b = document.createElement('button');
+    b.className = 'chip' + (cur===val ? ' chip-active' : '');
+    b.textContent = label;
+    b.onclick = () => { fn(val); render(); };
+    host.appendChild(b);
+  };
+  mk('すべて','');
+  items.forEach(i => mk(i,i));
+}
+
+function card(p){
+  const isFav = favs().includes(p.id);
+  return '<article class="card bg-white shadow-card hover:shadow-cardhover hover:-translate-y-0.5 transition-all duration-200 rounded-2xl overflow-hidden relative">'
+    + '<a href="#" onclick="showDetail(\''+p.id+'\');return false;" class="block">'
+    + '<figure class="relative aspect-[16/10] overflow-hidden bg-brand-50"><img src="'+esc(p.image_url)+'" alt="" class="w-full h-full object-cover" loading="lazy">'
+    + (expired(p) ? '<span class="absolute inset-0 bg-slate-900/45 flex items-center justify-center text-white font-bold tracking-widest">終了しました</span>' : '')
+    + '<span class="absolute top-3 left-3 badge bg-accentlime text-white border-none font-bold shadow">-'+rate(p)+'%</span>'
+    + (p.is_demo ? '<span class="absolute bottom-3 left-3 badge badge-sm bg-white/90 border-none text-slate-500">デモデータ</span>' : '')
+    + '</figure><div class="p-4 space-y-2">'
+    + '<div class="flex items-center gap-2 text-xs"><span class="badge badge-sm bg-brand-50 text-brand-700 border-none font-semibold">'+esc(p.genre)+'</span>'
+    + '<span class="text-slate-400">'+esc(p.area)+'・'+esc(p.station)+'</span></div>'
+    + '<h3 class="font-bold text-[15px] leading-snug">'+esc(p.store_name)+'</h3>'
+    + '<p class="text-[13px] text-slate-500 leading-relaxed">'+esc(p.description)+'</p>'
+    + '<div class="flex items-end justify-between pt-1"><p class="flex items-baseline gap-1.5"><span class="text-xs text-slate-400 line-through">'+yen(p.regular_price)+'</span><span class="text-lg font-extrabold text-brand-600">'+yen(p.student_price)+'</span></p>'
+    + '<span class="text-xs text-slate-400">♥ '+Number(p.likes||0)+'</span></div>'
+    + '<p class="text-[11px] text-slate-400">'+esc(p.valid_until)+'まで・確認日 '+esc(p.confirmed_at)+'</p>'
+    + '</div></a>'
+    + '<button type="button" class="fav-btn '+(isFav?'fav-on ':'')+'absolute top-3 right-3 w-9 h-9 rounded-full bg-white/95 shadow flex items-center justify-center text-slate-400" onclick="toggleFav(\''+p.id+'\')" aria-label="お気に入り"><i data-lucide="heart" class="w-4 h-4 pointer-events-none"></i></button>'
+    + '</article>';
+}
+
+function toggleFav(id){
+  let f = favs();
+  f = f.includes(id) ? f.filter(x=>x!==id) : f.concat(id);
+  localStorage.setItem(LS_FAV, JSON.stringify(f));
+  render();
+  lucide.createIcons();
+}
+
+function render(){
+  chips('genre-chips', GENRES, curGenre, v => curGenre = v);
+  chips('area-chips', AREAS, curArea, v => curArea = v);
+  const q = document.getElementById('q').value.trim();
+  const sort = document.getElementById('sort').value;
+  let posts = allPosts().filter(p =>
+    (!q || p.store_name.includes(q) || p.station.includes(q) || p.description.includes(q)) &&
+    (!curGenre || p.genre===curGenre) && (!curArea || p.area===curArea) &&
+    (!favOnly || favs().includes(p.id)));
+  if (sort==='discount') posts.sort((a,b)=>rate(b)-rate(a));
+  else if (sort==='price') posts.sort((a,b)=>a.student_price-b.student_price);
+  else if (sort==='popular') posts.sort((a,b)=>(b.likes||0)-(a.likes||0));
+  else posts.sort((a,b)=>String(b.created_at).localeCompare(String(a.created_at)));
+  document.getElementById('grid').innerHTML = posts.map(card).join('');
+  document.getElementById('count').textContent = posts.length + '件';
+  document.getElementById('empty').classList.toggle('hidden', posts.length>0);
+  lucide.createIcons();
+}
+
+function showList(){ favOnly=false; document.getElementById('view-list').classList.remove('hidden'); document.getElementById('view-detail').classList.add('hidden'); document.getElementById('view-form').classList.add('hidden'); render(); window.scrollTo(0,0); }
+function showFavorites(){ favOnly=true; document.getElementById('view-list').classList.remove('hidden'); document.getElementById('view-detail').classList.add('hidden'); document.getElementById('view-form').classList.add('hidden'); render(); window.scrollTo(0,0); }
+function showForm(){ document.getElementById('view-list').classList.add('hidden'); document.getElementById('view-detail').classList.add('hidden'); document.getElementById('view-form').classList.remove('hidden'); window.scrollTo(0,0); }
+
+function showDetail(id){
+  const p = allPosts().find(x=>x.id===id);
+  if(!p) return;
+  let comments = [];
+  try { comments = (JSON.parse(localStorage.getItem(LS_COMMENTS)||'{}'))[id] || []; } catch(e){}
+  const d = document.getElementById('view-detail');
+  d.innerHTML = '<a href="#" onclick="showList();return false;" class="text-sm text-slate-500">← 一覧に戻る</a>'
+    + '<article class="mt-4 bg-white rounded-3xl shadow-card overflow-hidden">'
+    + '<figure class="relative aspect-[16/8] bg-brand-50"><img src="'+esc(p.image_url)+'" class="w-full h-full object-cover" alt="">'
+    + (expired(p) ? '<span class="absolute inset-0 bg-slate-900/45 flex items-center justify-center text-white font-bold tracking-widest text-lg">この学割は終了しました</span>' : '')
+    + '<span class="absolute top-4 left-4 badge bg-accentlime text-white border-none font-bold shadow badge-lg">-'+rate(p)+'%</span></figure>'
+    + '<div class="p-6 md:p-8 space-y-6">'
+    + '<div><div class="flex items-center gap-2 text-xs mb-2"><span class="badge bg-brand-50 text-brand-700 border-none font-semibold">'+esc(p.genre)+'</span><span class="text-slate-400">'+esc(p.area)+'エリア・'+esc(p.station)+'</span></div>'
+    + '<h1 class="text-2xl md:text-3xl font-black">'+esc(p.store_name)+'</h1></div>'
+    + '<div class="rounded-2xl bg-brand-50 px-5 py-4 flex flex-wrap items-center gap-x-8 gap-y-2">'
+    + '<p class="flex items-baseline gap-2"><span class="text-sm text-slate-400">通常価格</span><span class="text-lg text-slate-400 line-through font-semibold">'+yen(p.regular_price)+'</span></p>'
+    + '<p class="flex items-baseline gap-2"><span class="text-sm text-brand-700 font-semibold">学割価格</span><span class="text-3xl font-black text-brand-600">'+yen(p.student_price)+'</span></p>'
+    + '<span class="badge bg-brand-600 text-white border-none font-bold">'+rate(p)+'% OFF</span></div>'
+    + '<p class="leading-relaxed text-[15px]">'+esc(p.description)+'</p>'
+    + '<dl class="text-sm space-y-2">'
+    + '<p><b class="text-slate-500">最寄り駅：</b>'+esc(p.station)+'</p>'
+    + '<p><b class="text-slate-500">対象：</b>'+esc(p.target_grades||'高校生全学年')+'</p>'
+    + '<p><b class="text-slate-500">有効期限：</b>'+esc(p.valid_until)+'まで</p>'
+    + '<p><b class="text-slate-500">情報確認日：</b>'+esc(p.confirmed_at)+'</p>'
+    + '<p><b class="text-slate-500">利用条件：</b>'+esc(p.conditions||'')+'</p></dl>'
+    + (p.official_url ? '<a href="'+esc(p.official_url)+'" target="_blank" rel="noopener noreferrer" class="btn bg-brand-600 hover:bg-brand-700 text-white border-none rounded-full px-6">公式サイトを見る</a>' : '')
+    + '</div></article>'
+    + '<section class="mt-8 bg-white rounded-3xl shadow-card p-6 md:p-8"><h2 class="section-title">コメント <span class="text-sm font-medium text-slate-400">'+comments.length+'件</span></h2>'
+    + '<div class="mt-5 space-y-4">' + (comments.length ? comments.map(c=>'<div class="bg-[#f7f8f7] rounded-2xl px-4 py-3"><p class="text-xs text-slate-400"><b class="text-slate-600">'+esc(c.name)+'</b> '+esc(c.date)+'</p><p class="text-sm mt-1">'+esc(c.body)+'</p></div>').join('') : '<p class="text-sm text-slate-400 text-center py-4">まだコメントはありません。</p>') + '</div>'
+    + '<form class="mt-6 flex flex-col sm:flex-row gap-3 border-t border-slate-100 pt-5" onsubmit="addComment(event,\''+p.id+'\')">'
+    + '<input id="c-name" maxlength="20" placeholder="名前（任意）" class="input input-bordered rounded-full sm:w-48">'
+    + '<input id="c-body" maxlength="300" required placeholder="コメントを入力（300文字まで）" class="input input-bordered rounded-full flex-1">'
+    + '<button class="btn bg-brand-600 hover:bg-brand-700 text-white border-none rounded-full px-6">投稿</button></form>'
+    + '<p class="text-[11px] text-slate-400 mt-2">本名・学校名など個人が特定できる情報は書かないでください。</p></section>';
+  document.getElementById('view-list').classList.add('hidden');
+  document.getElementById('view-form').classList.add('hidden');
+  d.classList.remove('hidden');
+  window.scrollTo(0,0);
+  lucide.createIcons();
+}
+
+function addComment(e, id){
+  e.preventDefault();
+  const name = document.getElementById('c-name').value.trim() || '匿名';
+  const body = document.getElementById('c-body').value.trim();
+  if(!body) return;
+  let all = {};
+  try { all = JSON.parse(localStorage.getItem(LS_COMMENTS)||'{}'); } catch(err){}
+  (all[id] = all[id] || []).push({name: name, body: body, date: new Date().toISOString().slice(0,10)});
+  localStorage.setItem(LS_COMMENTS, JSON.stringify(all));
+  showDetail(id);
+}
+
+// 投稿フォーム
+document.getElementById('f-genre').innerHTML = '<option value="">選択してください</option>' + GENRES.map(g=>'<option>'+g+'</option>').join('');
+document.getElementById('f-area').innerHTML = '<option value="">選択してください</option>' + AREAS.map(a=>'<option>'+a+'</option>').join('');
+const form = document.getElementById('post-form');
+form.addEventListener('input', () => {
+  const r = parseInt(form.regular_price.value,10), s = parseInt(form.student_price.value,10);
+  const el = document.getElementById('f-discount');
+  if (r>0 && s>=0 && s<r){ el.querySelector('span').textContent = Math.round((r-s)/r*100); el.classList.remove('hidden'); }
+  else el.classList.add('hidden');
+});
+document.getElementById('f-image').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if(!file) return;
+  if (file.size > 5*1024*1024){ alert('画像は5MBまでです'); e.target.value=''; return; }
+  const reader = new FileReader();
+  reader.onload = () => { uploadedImage = reader.result; const img = document.getElementById('f-preview'); img.src = uploadedImage; img.classList.remove('hidden'); };
+  reader.readAsDataURL(file);
+});
+form.addEventListener('submit', (e) => {
+  e.preventDefault();
+  const fd = new FormData(form);
+  const r = parseInt(fd.get('regular_price'),10), s = parseInt(fd.get('student_price'),10);
+  if (s >= r){ alert('学割価格は通常価格より安くしてください'); return; }
+  const post = {
+    id: 'u' + Date.now().toString(36),
+    store_name: fd.get('store_name'), genre: fd.get('genre'), area: fd.get('area'),
+    station: fd.get('station'), description: fd.get('description'),
+    regular_price: r, student_price: s, conditions: fd.get('conditions'),
+    target_grades: fd.get('target_grades') || '高校生全学年',
+    valid_until: fd.get('valid_until'), confirmed_at: new Date().toISOString().slice(0,10),
+    official_url: fd.get('official_url'), image_url: uploadedImage || 'images/default.svg',
+    likes: 0, created_at: new Date().toISOString(), is_demo: false
+  };
+  let mine = [];
+  try { mine = JSON.parse(localStorage.getItem(LS_POSTS)||'[]'); } catch(err){}
+  mine.unshift(post);
+  localStorage.setItem(LS_POSTS, JSON.stringify(mine));
+  alert('投稿しました（静的版のため、この端末内に保存されます）');
+  form.reset(); uploadedImage='';
+  document.getElementById('f-preview').classList.add('hidden');
+  showList();
+});
+
+render();
+lucide.createIcons();
+</script>
+</body>
+</html>
